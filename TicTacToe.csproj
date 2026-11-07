@@ -4,6 +4,8 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <!-- The test project lives in a sub-folder; keep its files out of the game itself. -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);TicTacToe.Tests\**</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>

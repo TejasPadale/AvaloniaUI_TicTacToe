@@ -3,20 +3,217 @@
         xmlns:vm="using:TicTacToe.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="680"
         x:Class="TicTacToe.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="TicTacToe">
+        Title="Tic Tac Toe"
+        Width="440" Height="680"
+        MinWidth="420" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <!-- Only used by the IDE previewer. The real DataContext is set in App.axaml.cs. -->
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
+    <!-- Colours. Light and Dark each get their own set; the app follows the Windows theme. -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="CardBrush" Color="#EEF1F6" />
+                    <SolidColorBrush x:Key="CellHoverBrush" Color="#E0E6F0" />
+                    <SolidColorBrush x:Key="CellPressedBrush" Color="#D0D8E6" />
+                    <SolidColorBrush x:Key="XBrush" Color="#2563EB" />
+                    <SolidColorBrush x:Key="OBrush" Color="#EA580C" />
+                    <SolidColorBrush x:Key="WinTextBrush" Color="#FFFFFF" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="CardBrush" Color="#2B2E36" />
+                    <SolidColorBrush x:Key="CellHoverBrush" Color="#353945" />
+                    <SolidColorBrush x:Key="CellPressedBrush" Color="#404553" />
+                    <SolidColorBrush x:Key="XBrush" Color="#60A5FA" />
+                    <SolidColorBrush x:Key="OBrush" Color="#FB923C" />
+                    <SolidColorBrush x:Key="WinTextBrush" Color="#0F172A" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 
+    <Window.Styles>
+        <!-- Scoreboard text -->
+        <Style Selector="TextBlock.label">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.score">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <!-- A player's card in the scoreboard.
+             The card of the player whose turn it is (or who won) gets a border in that player's colour. -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="BorderThickness" Value="3" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.card.x TextBlock.label">
+            <Setter Property="Foreground" Value="{DynamicResource XBrush}" />
+        </Style>
+        <Style Selector="Border.card.o TextBlock.label">
+            <Setter Property="Foreground" Value="{DynamicResource OBrush}" />
+        </Style>
+        <Style Selector="Border.card.x.active">
+            <Setter Property="BorderBrush" Value="{DynamicResource XBrush}" />
+        </Style>
+        <Style Selector="Border.card.o.active">
+            <Setter Property="BorderBrush" Value="{DynamicResource OBrush}" />
+        </Style>
+
+        <!-- The status line takes the colour of the player it is talking about. -->
+        <Style Selector="TextBlock.status.x">
+            <Setter Property="Foreground" Value="{DynamicResource XBrush}" />
+        </Style>
+        <Style Selector="TextBlock.status.o">
+            <Setter Property="Foreground" Value="{DynamicResource OBrush}" />
+        </Style>
+
+        <!-- A square on the board. We give it our own simple template (a rounded Border)
+             so we fully control how it looks, including when it is disabled. -->
+        <Style Selector="Button.cell">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="FontSize" Value="56" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="10">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.cell:pointerover">
+            <Setter Property="Background" Value="{DynamicResource CellHoverBrush}" />
+        </Style>
+        <Style Selector="Button.cell:pressed">
+            <Setter Property="Background" Value="{DynamicResource CellPressedBrush}" />
+        </Style>
+        <Style Selector="Button.cell.x">
+            <Setter Property="Foreground" Value="{DynamicResource XBrush}" />
+        </Style>
+        <Style Selector="Button.cell.o">
+            <Setter Property="Foreground" Value="{DynamicResource OBrush}" />
+        </Style>
+        <!-- The winning squares are filled with the winner's colour.
+             These styles come last, so they win over the ones above. -->
+        <Style Selector="Button.cell.winning">
+            <Setter Property="Foreground" Value="{DynamicResource WinTextBrush}" />
+        </Style>
+        <Style Selector="Button.cell.winning.x">
+            <Setter Property="Background" Value="{DynamicResource XBrush}" />
+        </Style>
+        <Style Selector="Button.cell.winning.o">
+            <Setter Property="Background" Value="{DynamicResource OBrush}" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="24,16,24,24">
+
+        <TextBlock Grid.Row="0"
+                   Text="Tic Tac Toe"
+                   FontSize="28" FontWeight="Bold"
+                   HorizontalAlignment="Center" />
+
+        <!-- Settings: who you play against, and how good the computer is -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal" HorizontalAlignment="Center"
+                    Spacing="8" Margin="0,12,0,0">
+            <TextBlock Text="Play against" VerticalAlignment="Center" />
+            <ComboBox ItemsSource="{Binding Opponents}"
+                      SelectedItem="{Binding PlayAgainst}"
+                      MinWidth="115" />
+            <TextBlock Text="Level" VerticalAlignment="Center" Margin="8,0,0,0"
+                       IsVisible="{Binding IsVsComputer}" />
+            <ComboBox ItemsSource="{Binding Levels}"
+                      SelectedItem="{Binding Level}"
+                      MinWidth="100"
+                      IsVisible="{Binding IsVsComputer}" />
+        </StackPanel>
+
+        <!-- Scoreboard: X's card, draws, O's card -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*" Margin="0,16,0,0">
+            <Border Grid.Column="0" Classes="card x" Classes.active="{Binding IsXActive}">
+                <StackPanel>
+                    <TextBlock Classes="label" Text="{Binding XName}" />
+                    <TextBlock Classes="score" Text="{Binding XWins}" />
+                </StackPanel>
+            </Border>
+            <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                <TextBlock Classes="label" Text="Draws" />
+                <TextBlock Classes="score" Text="{Binding Draws}" />
+            </StackPanel>
+            <Border Grid.Column="2" Classes="card o" Classes.active="{Binding IsOActive}">
+                <StackPanel>
+                    <TextBlock Classes="label" Text="{Binding OName}" />
+                    <TextBlock Classes="score" Text="{Binding OWins}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Whose turn it is, or who won -->
+        <TextBlock Grid.Row="3"
+                   Classes="status"
+                   Classes.x="{Binding IsXActive}"
+                   Classes.o="{Binding IsOActive}"
+                   Text="{Binding StatusText}"
+                   FontSize="22" FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,16,0,12" />
+
+        <!-- The board: 9 buttons in a 3x3 grid. The Viewbox scales it to fit the window. -->
+        <Viewbox Grid.Row="4" Stretch="Uniform">
+            <ItemsControl ItemsSource="{Binding Cells}" Width="300" Height="300">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="3" Columns="3" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CellViewModel">
+                        <Button Classes="cell"
+                                Classes.x="{Binding IsX}"
+                                Classes.o="{Binding IsO}"
+                                Classes.winning="{Binding IsWinning}"
+                                Content="{Binding Symbol}"
+                                Command="{Binding PlayCommand}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Viewbox>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="5"
+                    Orientation="Horizontal" HorizontalAlignment="Center"
+                    Spacing="12" Margin="0,20,0,0">
+            <Button Classes="accent"
+                    Content="New Game"
+                    MinWidth="130" HorizontalContentAlignment="Center"
+                    Command="{Binding NewGameCommand}" />
+            <Button Content="Reset Score"
+                    MinWidth="130" HorizontalContentAlignment="Center"
+                    Command="{Binding ResetScoresCommand}" />
+        </StackPanel>
+    </Grid>
 </Window>
